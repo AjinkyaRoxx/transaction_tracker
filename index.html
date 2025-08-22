@@ -998,14 +998,25 @@
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
         // 🔹 Replace with your Firebase project config
+        //const firebaseConfig = {
+        //    apiKey: "YOUR_API_KEY",
+        //    authDomain: "YOUR_PROJECT.firebaseapp.com",
+        //    projectId: "YOUR_PROJECT_ID",
+        //    storageBucket: "YOUR_PROJECT.appspot.com",
+        //    messagingSenderId: "XXXX",
+        //    appId: "1:XXXX:web:XXXX"
+        //};
+
+        // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "XXXX",
-            appId: "1:XXXX:web:XXXX"
+            apiKey: "AIzaSyAbbGBFECeYPzZOQDCf9ATxdW1WZpTVX2w",
+            authDomain: "transaction-tracker-e9928.firebaseapp.com",
+            projectId: "transaction-tracker-e9928",
+            storageBucket: "transaction-tracker-e9928.firebasestorage.app",
+            messagingSenderId: "869725167353",
+            appId: "1:869725167353:web:4237dbcd2e6b8fb1e34c28"
         };
+
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
