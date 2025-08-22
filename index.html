@@ -1012,133 +1012,7 @@
         </div>
     </div>
 
-        <!-- Firebase SDKs -->
-    <script type="module">
-import { 
-    initializeApp 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import { 
-    getFirestore, collection, addDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import { 
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-// 🔹 Replace with your Firebase project config
-    // Your Firebase config (replace if needed)
-    const firebaseConfig = {
-        apiKey: "AIzaSyAbbGBFECeYPzZOQDCf9ATxdW1WZpTVX2w",
-        authDomain: "transaction-tracker-e9928.firebaseapp.com",
-        projectId: "transaction-tracker-e9928",
-        storageBucket: "transaction-tracker-e9928.firebasestorage.app",
-        messagingSenderId: "869725167353",
-        appId: "1:869725167353:dbcd2e6b8fb1e34c28"
-    };
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-// 🔹 Make available globally
-window.db = db;
-window.auth = auth;
-
-// === FIRESTORE SAVE FIXES ===
-
-// Save Transaction
-window.addTransaction = async function () {
-    const date = document.getElementById('date').value;
-    const person = document.getElementById('person').value;
-    const description = document.getElementById('description').value;
-    const amount = document.getElementById('amount').value;
-    const type = document.getElementById('type').value;
-    const paymentMethod = document.getElementById('paymentMethod').value;
-    const category = document.getElementById('category').value;
-    const utr = document.getElementById('utr').value;
-
-    const newTransaction = {
-        date,
-        person,
-        description,
-        amount: parseFloat(amount),
-        type,
-        paymentMethod,
-        category,
-        utr,
-        createdAt: new Date()
-    };
-
-    try {
-        await addDoc(collection(db, "transactions"), newTransaction);
-        console.log("Transaction saved:", newTransaction);
-    } catch (err) {
-        console.error("Error saving transaction:", err);
-    }
-
-    document.getElementById('transactionModal').style.display = 'none';
-    document.getElementById('transactionForm').reset();
-};
-
-// Save Person
-window.addPerson = async function () {
-    const name = document.getElementById('personName').value;
-    const relationship = document.getElementById('relationship').value;
-    const contact = document.getElementById('contact').value;
-
-    const newPerson = { name, relationship, contact, createdAt: new Date() };
-
-    try {
-        await addDoc(collection(db, "people"), newPerson);
-        console.log("Person saved:", newPerson);
-    } catch (err) {
-        console.error("Error saving person:", err);
-    }
-
-    document.getElementById('personModal').style.display = 'none';
-    document.getElementById('personForm').reset();
-};
-
-// Save Category
-window.addNewCategory = async function () {
-    const newCategory = document.getElementById('newCategory').value.trim();
-    if (!newCategory) return;
-
-    try {
-        await addDoc(collection(db, "categories"), { name: newCategory, createdAt: new Date() });
-        console.log("Category saved:", newCategory);
-    } catch (err) {
-        console.error("Error saving category:", err);
-    }
-
-    document.getElementById('categoryModal').style.display = 'none';
-    document.getElementById('categoryForm').reset();
-};
-
-// Save Currency
-window.addNewCurrency = async function () {
-    const name = document.getElementById('currencyName').value.trim();
-    const code = document.getElementById('currencyCode').value.trim().toUpperCase();
-    const symbol = document.getElementById('currencySymbol').value.trim();
-    if (!name || !code || !symbol) return;
-
-    const newCurrency = { name, code, symbol, createdAt: new Date() };
-
-    try {
-        await addDoc(collection(db, "currencies"), newCurrency);
-        console.log("Currency saved:", newCurrency);
-    } catch (err) {
-        console.error("Error saving currency:", err);
-    }
-
-    document.getElementById('currencyModal').style.display = 'none';
-    document.getElementById('currencyForm').reset();
-};
-</script>
-
-
+        
     <script>
         // Data storage - starting with minimal sample data
         let transactions = [];
@@ -2140,7 +2014,106 @@ window.addNewCurrency = async function () {
             // Update people list to show updated interest
             updatePeopleList();
             updateAllPeopleList();
-        }
+        } 
+
+        
     </script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 🔑 Replace with your Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAbbGBFECeYPzZOQDCf9ATxdW1WZpTVX2w",
+  authDomain: "transaction-tracker-e9928.firebaseapp.com",
+  projectId: "transaction-tracker-e9928",
+  storageBucket: "transaction-tracker-e9928.firebasestorage.app",
+  messagingSenderId: "869725167353",
+  appId: "1:869725167353:web:4237dbcd2e6b8fb1e34c28"
+};
+
+  // Init Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // --- Save Helpers ---
+  async function savePersonToFirestore(person) {
+    try { await addDoc(collection(db, "people"), person); } catch (err) { console.error(err); }
+  }
+  async function saveCategoryToFirestore(category) {
+    try { await addDoc(collection(db, "categories"), { name: category }); } catch (err) { console.error(err); }
+  }
+  async function saveTransactionToFirestore(transaction) {
+    try { await addDoc(collection(db, "transactions"), transaction); } catch (err) { console.error(err); }
+  }
+  async function saveCurrencyToFirestore(currency) {
+    try { await addDoc(collection(db, "currencies"), currency); } catch (err) { console.error(err); }
+  }
+
+  // --- Load Helpers ---
+  async function loadPeopleFromFirestore() {
+    people.length = 0;
+    const snapshot = await getDocs(collection(db, "people"));
+    snapshot.forEach(doc => people.push({ id: doc.id, ...doc.data() }));
+    updateUI();
+  }
+  async function loadCategoriesFromFirestore() {
+    categories.length = 0;
+    const snapshot = await getDocs(collection(db, "categories"));
+    snapshot.forEach(doc => categories.push(doc.data().name));
+    updateCategoryDropdown();
+  }
+  async function loadCurrenciesFromFirestore() {
+    currencies.length = 0;
+    const snapshot = await getDocs(collection(db, "currencies"));
+    snapshot.forEach(doc => currencies.push(doc.data()));
+    updateCurrencyDropdown();
+  }
+  async function loadTransactionsFromFirestore() {
+    transactions.length = 0;
+    const snapshot = await getDocs(collection(db, "transactions"));
+    snapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
+    updateTransactionTable();
+  }
+
+  async function loadAllData() {
+    await loadPeopleFromFirestore();
+    await loadCategoriesFromFirestore();
+    await loadCurrenciesFromFirestore();
+    await loadTransactionsFromFirestore();
+  }
+
+  // --- Hook existing add functions ---
+  const originalAddPerson = window.addPerson;
+  window.addPerson = function () {
+    originalAddPerson();
+    savePersonToFirestore(people[people.length - 1]);
+  };
+  const originalAddCategory = window.addNewCategory;
+  window.addNewCategory = function () {
+    const before = [...categories];
+    originalAddCategory();
+    const added = categories.find(c => !before.includes(c));
+    if (added) saveCategoryToFirestore(added);
+  };
+  const originalAddTransaction = window.addTransaction;
+  window.addTransaction = function () {
+    originalAddTransaction();
+    saveTransactionToFirestore(transactions[transactions.length - 1]);
+  };
+  const originalAddCurrency = window.addNewCurrency;
+  window.addNewCurrency = function () {
+    originalAddCurrency();
+    saveCurrencyToFirestore(currencies[currencies.length - 1]);
+  };
+
+  // Load Firestore data on page start
+  window.addEventListener("DOMContentLoaded", loadAllData);
+</script>
+
+
+
 </body>
 </html>
+
