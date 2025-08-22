@@ -10,7 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        /* Your existing CSS styles remain unchanged */
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -1073,6 +1072,9 @@
             // Set up login functionality
             setupLogin();
             
+            // Set up dashboard functionality (even though it's hidden)
+            setupDashboard();
+            
             // Check if user is already logged in
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -1141,8 +1143,6 @@
         }
         
         function setupDashboard() {
-            updateUI();
-            
             // Tab functionality
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
@@ -1181,34 +1181,49 @@
             
             const closeButtons = document.querySelectorAll('.close');
             
-            addTransactionBtn.addEventListener('click', function() {
-                transactionModal.style.display = 'flex';
-                document.getElementById('date').valueAsDate = new Date();
-            });
+            // Add event listeners to buttons
+            if (addTransactionBtn) {
+                addTransactionBtn.addEventListener('click', function() {
+                    transactionModal.style.display = 'flex';
+                    document.getElementById('date').valueAsDate = new Date();
+                });
+            }
             
-            addPersonBtn.addEventListener('click', function() {
-                personModal.style.display = 'flex';
-            });
+            if (addPersonBtn) {
+                addPersonBtn.addEventListener('click', function() {
+                    personModal.style.display = 'flex';
+                });
+            }
             
-            addPaymentMethodBtn.addEventListener('click', function() {
-                paymentMethodModal.style.display = 'flex';
-            });
+            if (addPaymentMethodBtn) {
+                addPaymentMethodBtn.addEventListener('click', function() {
+                    paymentMethodModal.style.display = 'flex';
+                });
+            }
             
-            addCategoryBtn.addEventListener('click', function() {
-                categoryModal.style.display = 'flex';
-            });
+            if (addCategoryBtn) {
+                addCategoryBtn.addEventListener('click', function() {
+                    categoryModal.style.display = 'flex';
+                });
+            }
             
-            managePaymentMethods.addEventListener('click', function() {
-                paymentMethodModal.style.display = 'flex';
-            });
+            if (managePaymentMethods) {
+                managePaymentMethods.addEventListener('click', function() {
+                    paymentMethodModal.style.display = 'flex';
+                });
+            }
             
-            manageCategories.addEventListener('click', function() {
-                categoryModal.style.display = 'flex';
-            });
+            if (manageCategories) {
+                manageCategories.addEventListener('click', function() {
+                    categoryModal.style.display = 'flex';
+                });
+            }
             
-            manageCurrencies.addEventListener('click', function() {
-                currencyModal.style.display = 'flex';
-            });
+            if (manageCurrencies) {
+                manageCurrencies.addEventListener('click', function() {
+                    currencyModal.style.display = 'flex';
+                });
+            }
             
             closeButtons.forEach(button => {
                 button.addEventListener('click', function() {
@@ -1247,50 +1262,74 @@
             });
             
             // Form submission
-            document.getElementById('transactionForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addTransaction();
-            });
+            const transactionForm = document.getElementById('transactionForm');
+            if (transactionForm) {
+                transactionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addTransaction();
+                });
+            }
             
-            document.getElementById('personForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addPerson();
-            });
+            const personForm = document.getElementById('personForm');
+            if (personForm) {
+                personForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addPerson();
+                });
+            }
             
-            document.getElementById('paymentMethodForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addNewPaymentMethod();
-            });
+            const paymentMethodForm = document.getElementById('paymentMethodForm');
+            if (paymentMethodForm) {
+                paymentMethodForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addNewPaymentMethod();
+                });
+            }
             
-            document.getElementById('categoryForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addNewCategory();
-            });
+            const categoryForm = document.getElementById('categoryForm');
+            if (categoryForm) {
+                categoryForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addNewCategory();
+                });
+            }
             
-            document.getElementById('currencyForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addNewCurrency();
-            });
+            const currencyForm = document.getElementById('currencyForm');
+            if (currencyForm) {
+                currencyForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    addNewCurrency();
+                });
+            }
             
-            document.getElementById('editTransactionForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                updateTransaction();
-            });
+            const editTransactionForm = document.getElementById('editTransactionForm');
+            if (editTransactionForm) {
+                editTransactionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    updateTransaction();
+                });
+            }
             
             // Currency selector change
-            document.getElementById('currency').addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    currencyModal.style.display = 'flex';
-                } else {
-                    currentCurrency = this.value;
-                    updateUI();
-                }
-            });
+            const currencySelect = document.getElementById('currency');
+            if (currencySelect) {
+                currencySelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        currencyModal.style.display = 'flex';
+                    } else {
+                        currentCurrency = this.value;
+                        updateUI();
+                    }
+                });
+            }
             
             // Interest rate change
-            document.getElementById('interestRate').addEventListener('change', function() {
-                updateInterestCalculation();
-            });
+            const interestRateInput = document.getElementById('interestRate');
+            if (interestRateInput) {
+                interestRateInput.addEventListener('change', function() {
+                    updateInterestCalculation();
+                });
+            }
         }
 
         // Add minimal sample data for demonstration
