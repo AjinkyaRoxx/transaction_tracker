@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Tracker</title>
+    <title>Finance Tracker - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -39,7 +43,6 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            background: linear-gradient(120deg, var(--primary), var(--secondary));
         }
         
         .login-card {
@@ -48,13 +51,7 @@
             width: 100%;
             max-width: 400px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            transform: translateY(0);
-            transition: transform 0.3s ease;
-        }
-        
-        .login-card:hover {
-            transform: translateY(-5px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
         .login-header {
@@ -109,7 +106,6 @@
         .form-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
         
         .password-toggle {
@@ -208,11 +204,10 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Dashboard Styles */
+        /* Your existing dashboard styles below */
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 15px;
         }
         
         header {
@@ -586,17 +581,10 @@
             .settings-section {
                 flex-direction: column;
             }
-            
-            .login-actions {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .forgot-password {
-                margin-top: 5px;
-            }
         }
+        
+        /* ... rest of your existing styles ... */
+
     </style>
 </head>
 <body>
@@ -652,363 +640,547 @@
     </div>
 
     <div id="dashboard" style="display:none;">
-        <div class="container">
-            <header>
-                <div class="header-content">
-                    <h1 class="app-title"><i class="fas fa-money-bill-transfer"></i> Finance Tracker</h1>
-                    <div class="currency-selector">
-                        <label for="currency">Currency:</label>
-                        <select id="currency">
-                            <option value="INR" data-symbol="₹">Indian Rupee (₹)</option>
-                            <option value="USD" data-symbol="$">US Dollar ($)</option>
-                            <option value="EUR" data-symbol="€">Euro (€)</option>
-                            <option value="GBP" data-symbol="£">British Pound (£)</option>
-                            <option value="JPY" data-symbol="¥">Japanese Yen (¥)</option>
-                            <option value="custom">Add Custom...</option>
-                        </select>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn" id="addTransactionBtn"><i class="fas fa-plus"></i> Add Transaction</button>
-                        <button class="btn" id="addPersonBtn"><i class="fas fa-user-plus"></i> Add Person</button>
-                        <button class="btn btn-warning" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                    </div>
+            <div class="container">
+        <header>
+            <div class="header-content">
+                <h1 class="app-title"><i class="fas fa-money-bill-transfer"></i> Finance Tracker</h1>
+                <div class="currency-selector">
+                    <label for="currency">Currency:</label>
+                    <select id="currency">
+                        <option value="INR" data-symbol="₹">Indian Rupee (₹)</option>
+                        <option value="USD" data-symbol="$">US Dollar ($)</option>
+                        <option value="EUR" data-symbol="€">Euro (€)</option>
+                        <option value="GBP" data-symbol="£">British Pound (£)</option>
+                        <option value="JPY" data-symbol="¥">Japanese Yen (¥)</option>
+                        <option value="custom">Add Custom...</option>
+                    </select>
                 </div>
-            </header>
-            
-            <div class="settings-section">
-                <div class="settings-btn" id="managePaymentMethods">
-                    <i class="fas fa-credit-card"></i> Payment Methods
-                </div>
-                <div class="settings-btn" id="manageCategories">
-                    <i class="fas fa-tags"></i> Categories
-                </div>
-                <div class="settings-btn" id="manageCurrencies">
-                    <i class="fas fa-money-bill-wave"></i> Currencies
+                <div class="action-buttons">
+                    <button class="btn" id="addTransactionBtn"><i class="fas fa-plus"></i> Add Transaction</button>
+                    <button class="btn" id="addPersonBtn"><i class="fas fa-user-plus"></i> Add Person</button>
                 </div>
             </div>
-            
-            <div class="tabs">
-                <div class="tab active" data-tab="overview">Overview</div>
-                <div class="tab" data-tab="people">People</div>
-                <div class="tab" data-tab="transactions">Transactions</div>
+        </header>
+        
+        <div class="settings-section">
+            <div class="settings-btn" id="managePaymentMethods">
+                <i class="fas fa-credit-card"></i> Payment Methods
             </div>
-            
-            <div class="tab-content" id="overview-tab">
-                <div class="summary-cards">
-                    <div class="summary-card">
-                        <i class="fas fa-hand-holding-usd negative"></i>
-                        <div>You Owe</div>
-                        <div class="amount negative" id="youOwe">₹0</div>
-                        <div id="youOweCount">To 0 people</div>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fas fa-money-bill-wave positive"></i>
-                        <div>You Are Owed</div>
-                        <div class="amount positive" id="youAreOwed">₹0</div>
-                        <div id="youAreOwedCount">By 0 people</div>
-                    </div>
-                    <div class="summary-card">
-                        <i class="fas fa-scale-balanced neutral"></i>
-                        <div>Net Balance</div>
-                        <div class="amount neutral" id="netBalance">₹0</div>
-                        <div id="netBalanceText">No transactions yet</div>
-                    </div>
-                    <div class="interest-card">
-                        <i class="fas fa-percentage"></i>
-                        <div>Interest Impact</div>
-                        <div class="amount" id="interestImpact">₹0</div>
-                        <div id="interestImpactText">Per year at 0%</div>
-                        <div class="interest-rate-input">
-                            <label for="interestRate">Interest Rate:</label>
-                            <input type="number" id="interestRate" value="8" min="0" max="100" step="0.1">
-                            <span>% per year</span>
-                        </div>
-                    </div>
+            <div class="settings-btn" id="manageCategories">
+                <i class="fas fa-tags"></i> Categories
+            </div>
+            <div class="settings-btn" id="manageCurrencies">
+                <i class="fas fa-money-bill-wave"></i> Currencies
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="people">People</div>
+            <div class="tab" data-tab="transactions">Transactions</div>
+        </div>
+        
+        <div class="tab-content" id="overview-tab">
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <i class="fas fa-hand-holding-usd negative"></i>
+                    <div>You Owe</div>
+                    <div class="amount negative" id="youOwe">₹0</div>
+                    <div id="youOweCount">To 0 people</div>
                 </div>
-                
-                <div class="card">
-                    <h2 class="card-title"><i class="fas fa-users"></i> People Overview</h2>
-                    <div class="people-list" id="peopleList">
-                        <div class="empty-state" id="emptyPeopleState">
-                            <i class="fas fa-user-friends"></i>
-                            <h3>No people added yet</h3>
-                            <p>Add people to start tracking transactions</p>
-                        </div>
+                <div class="summary-card">
+                    <i class="fas fa-money-bill-wave positive"></i>
+                    <div>You Are Owed</div>
+                    <div class="amount positive" id="youAreOwed">₹0</div>
+                    <div id="youAreOwedCount">By 0 people</div>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-scale-balanced neutral"></i>
+                    <div>Net Balance</div>
+                    <div class="amount neutral" id="netBalance">₹0</div>
+                    <div id="netBalanceText">No transactions yet</div>
+                </div>
+                <div class="interest-card">
+                    <i class="fas fa-percentage"></i>
+                    <div>Interest Impact</div>
+                    <div class="amount" id="interestImpact">₹0</div>
+                    <div id="interestImpactText">Per year at 0%</div>
+                    <div class="interest-rate-input">
+                        <label for="interestRate">Interest Rate:</label>
+                        <input type="number" id="interestRate" value="8" min="0" max="100" step="0.1">
+                        <span>% per year</span>
                     </div>
                 </div>
             </div>
             
-            <div class="tab-content" id="people-tab" style="display: none;">
-                <div class="card">
-                    <h2 class="card-title"><i class="fas fa-users"></i> All People</h2>
-                    <div class="people-list" id="allPeopleList">
-                        <div class="empty-state">
-                            <i class="fas fa-user-friends"></i>
-                            <h3>No people added yet</h3>
-                            <p>Add people to start tracking transactions</p>
-                        </div>
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-users"></i> People Overview</h2>
+                <div class="people-list" id="peopleList">
+                    <div class="empty-state" id="emptyPeopleState">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>No people added yet</h3>
+                        <p>Add people to start tracking transactions</p>
                     </div>
-                </div>
-            </div>
-            
-            <div class="tab-content" id="transactions-tab" style="display: none;">
-                <div class="card transactions">
-                    <h2 class="card-title"><i class="fas fa-list"></i> All Transactions</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Person</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Payment Method</th>
-                                <th>Category</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTable">
-                            <tr id="emptyTransactionState">
-                                <td colspan="7">
-                                    <div class="empty-state">
-                                        <i class="fas fa-receipt"></i>
-                                        <h3>No transactions yet</h3>
-                                        <p>Add your first transaction to get started</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
         
-        <!-- Add Transaction Modal -->
-        <div class="modal" id="transactionModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add New Transaction</h2>
-                    <span class="close">&times;</span>
+        <div class="tab-content" id="people-tab" style="display: none;">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-users"></i> All People</h2>
+                <div class="people-list" id="allPeopleList">
+                    <div class="empty-state">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>No people added yet</h3>
+                        <p>Add people to start tracking transactions</p>
+                    </div>
                 </div>
-                <form id="transactionForm">
-                    <div class="form-group">
-                        <label for="date">Date</label>
-                        <input type="date" id="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="person">Person</label>
-                        <select id="person" required>
-                            <option value="">Select a person</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <input type="text" id="description" placeholder="Enter description" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="amount">Amount</label>
-                        <input type="number" id="amount" placeholder="Enter amount" min="0" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="type">Transaction Type</label>
-                        <select id="type" required>
-                            <option value="">Select type</option>
-                            <option value="you_paid">You paid</option>
-                            <option value="they_paid">They paid</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentMethod">Payment Method</label>
-                        <select id="paymentMethod" required>
-                            <option value="">Select method</option>
-                        </select>
-                        <button type="button" class="btn btn-sm" id="addPaymentMethodBtn" style="margin-top: 5px;">
-                            <i class="fas fa-plus"></i> Add New
-                        </button>
-                    </div>
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select id="category" required>
-                            <option value="">Select category</option>
-                        </select>
-                        <button type="button" class="btn btn-sm" id="addCategoryBtn" style="margin-top: 5px;">
-                            <i class="fas fa-plus"></i> Add New
-                        </button>
-                    </div>
-                    <div class="form-group">
-                        <label for="utr">UTR (Unique Transaction Reference)</label>
-                        <input type="text" id="utr" placeholder="Optional UTR number">
-                    </div>
-                    <button type="submit" class="btn">Add Transaction</button>
-                </form>
             </div>
         </div>
-
-        <!-- Add Person Modal -->
-        <div class="modal" id="personModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add New Person</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="personForm">
-                    <div class="form-group">
-                        <label for="personName">Name</label>
-                        <input type="text" id="personName" placeholder="Enter name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="relationship">Relationship</label>
-                        <select id="relationship" required>
-                            <option value="">Select relationship</option>
-                            <option value="friend">Friend</option>
-                            <option value="family">Family</option>
-                            <option value="colleague">Colleague</option>
-                            <option value="business">Business</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contact">Contact (Optional)</label>
-                        <input type="text" id="contact" placeholder="Phone or email">
-                    </div>
-                    <button type="submit" class="btn">Add Person</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Add Payment Method Modal -->
-        <div class="modal" id="paymentMethodModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add Payment Method</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="paymentMethodForm">
-                    <div class="form-group">
-                        <label for="newPaymentMethod">Payment Method Name</label>
-                        <input type="text" id="newPaymentMethod" placeholder="e.g., PayPal, Venmo" required>
-                    </div>
-                    <button type="submit" class="btn">Add Payment Method</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Add Category Modal -->
-        <div class="modal" id="categoryModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add Category</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="categoryForm">
-                    <div class="form-group">
-                        <label for="newCategory">Category Name</label>
-                        <input type="text" id="newCategory" placeholder="e.g., Travel, Utilities" required>
-                    </div>
-                    <button type="submit" class="btn">Add Category</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Add Currency Modal -->
-        <div class="modal" id="currencyModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add Custom Currency</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="currencyForm">
-                    <div class="form-group">
-                        <label for="currencyName">Currency Name</label>
-                        <input type="text" id="currencyName" placeholder="e.g., Australian Dollar" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="currencyCode">Currency Code</label>
-                        <input type="text" id="currencyCode" placeholder="e.g., AUD" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="currencySymbol">Currency Symbol</label>
-                        <input type="text" id="currencySymbol" placeholder="e.g., A$" required>
-                    </div>
-                    <button type="submit" class="btn">Add Currency</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Edit Transaction Modal -->
-        <div class="modal" id="editTransactionModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Edit Transaction</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <form id="editTransactionForm">
-                    <input type="hidden" id="editId">
-                    <div class="form-group">
-                        <label for="editDate">Date</label>
-                        <input type="date" id="editDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editPerson">Person</label>
-                        <select id="editPerson" required>
-                            <option value="">Select a person</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editDescription">Description</label>
-                        <input type="text" id="editDescription" placeholder="Enter description" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editAmount">Amount</label>
-                        <input type="number" id="editAmount" placeholder="Enter amount" min="0" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editType">Transaction Type</label>
-                        <select id="editType" required>
-                            <option value="">Select type</option>
-                            <option value="you_paid">You paid</option>
-                            <option value="they_paid">They paid</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editPaymentMethod">Payment Method</label>
-                        <select id="editPaymentMethod" required>
-                            <option value="">Select method</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editCategory">Category</label>
-                        <select id="editCategory" required>
-                            <option value="">Select category</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editUtr">UTR (Unique Transaction Reference)</label>
-                        <input type="text" id="editUtr" placeholder="Optional UTR number">
-                    </div>
-                    <div class="form-group">
-                        <label for="editSettlementDate">Settlement Date (if settled)</label>
-                        <input type="date" id="editSettlementDate">
-                    </div>
-                    <button type="submit" class="btn">Update Transaction</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- View Person Modal -->
-        <div class="modal" id="viewPersonModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Person Details</h2>
-                    <span class="close">&times;</span>
-                </div>
-                <div id="personDetails">
-                    <!-- Person details will be inserted here -->
-                </div>
+        
+        <div class="tab-content" id="transactions-tab" style="display: none;">
+            <div class="card transactions">
+                <h2 class="card-title"><i class="fas fa-list"></i> All Transactions</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Person</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Payment Method</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTable">
+                        <tr id="emptyTransactionState">
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-receipt"></i>
+                                    <h3>No transactions yet</h3>
+                                    <p>Add your first transaction to get started</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    
+    <!-- Add Transaction Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Transaction</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="person">Person</label>
+                    <select id="person" required>
+                        <option value="">Select a person</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" placeholder="Enter description" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount</label>
+                    <input type="number" id="amount" placeholder="Enter amount" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="type">Transaction Type</label>
+                    <select id="type" required>
+                        <option value="">Select type</option>
+                        <option value="you_paid">You paid</option>
+                        <option value="they_paid">They paid</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method</label>
+                    <select id="paymentMethod" required>
+                        <option value="">Select method</option>
+                    </select>
+                    <button type="button" class="btn btn-sm" id="addPaymentMethodBtn" style="margin-top: 5px;">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="">Select category</option>
+                    </select>
+                    <button type="button" class="btn btn-sm" id="addCategoryBtn" style="margin-top: 5px;">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label for="utr">UTR (Unique Transaction Reference)</label>
+                    <input type="text" id="utr" placeholder="Optional UTR number">
+                </div>
+                <button type="submit" class="btn">Add Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Person Modal -->
+    <div class="modal" id="personModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Person</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="personForm">
+                <div class="form-group">
+                    <label for="personName">Name</label>
+                    <input type="text" id="personName" placeholder="Enter name" required>
+                </div>
+                <div class="form-group">
+                    <label for="relationship">Relationship</label>
+                    <select id="relationship" required>
+                        <option value="">Select relationship</option>
+                        <option value="friend">Friend</option>
+                        <option value="family">Family</option>
+                        <option value="colleague">Colleague</option>
+                        <option value="business">Business</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contact (Optional)</label>
+                    <input type="text" id="contact" placeholder="Phone or email">
+                </div>
+                <button type="submit" class="btn">Add Person</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Payment Method Modal -->
+    <div class="modal" id="paymentMethodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Payment Method</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="paymentMethodForm">
+                <div class="form-group">
+                    <label for="newPaymentMethod">Payment Method Name</label>
+                    <input type="text" id="newPaymentMethod" placeholder="e.g., PayPal, Venmo" required>
+                </div>
+                <button type="submit" class="btn">Add Payment Method</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Category</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label for="newCategory">Category Name</label>
+                    <input type="text" id="newCategory" placeholder="e.g., Travel, Utilities" required>
+                </div>
+                <button type="submit" class="btn">Add Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Currency Modal -->
+    <div class="modal" id="currencyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Custom Currency</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="currencyForm">
+                <div class="form-group">
+                    <label for="currencyName">Currency Name</label>
+                    <input type="text" id="currencyName" placeholder="e.g., Australian Dollar" required>
+                </div>
+                <div class="form-group">
+                    <label for="currencyCode">Currency Code</label>
+                    <input type="text" id="currencyCode" placeholder="e.g., AUD" required>
+                </div>
+                <div class="form-group">
+                    <label for="currencySymbol">Currency Symbol</label>
+                    <input type="text" id="currencySymbol" placeholder="e.g., A$" required>
+                </div>
+                <button type="submit" class="btn">Add Currency</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal" id="editTransactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Transaction</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="editTransactionForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editDate">Date</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPerson">Person</label>
+                    <select id="editPerson" required>
+                        <option value="">Select a person</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Description</label>
+                    <input type="text" id="editDescription" placeholder="Enter description" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAmount">Amount</label>
+                    <input type="number" id="editAmount" placeholder="Enter amount" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="editType">Transaction Type</label>
+                    <select id="editType" required>
+                        <option value="">Select type</option>
+                        <option value="you_paid">You paid</option>
+                        <option value="they_paid">They paid</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editPaymentMethod">Payment Method</label>
+                    <select id="editPaymentMethod" required>
+                        <option value="">Select method</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory" required>
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUtr">UTR (Unique Transaction Reference)</label>
+                    <input type="text" id="editUtr" placeholder="Optional UTR number">
+                </div>
+                <div class="form-group">
+                    <label for="editSettlementDate">Settlement Date (if settled)</label>
+                    <input type="date" id="editSettlementDate">
+                </div>
+                <button type="submit" class="btn">Update Transaction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Person Modal -->
+    <div class="modal" id="viewPersonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Person Details</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div id="personDetails">
+                <!-- Person details will be inserted here -->
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        // 🔹 Replace with your Firebase project config
+        //const firebaseConfig = {
+        //    apiKey: "YOUR_API_KEY",
+        //    authDomain: "YOUR_PROJECT.firebaseapp.com",
+        //    projectId: "YOUR_PROJECT_ID",
+        //    storageBucket: "YOUR_PROJECT.appspot.com",
+        //    messagingSenderId: "XXXX",
+        //    appId: "1:XXXX:web:XXXX"
+        //};
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbbGBFECeYPzZOQDCf9ATxdW1WZpTVX2w",
+            authDomain: "transaction-tracker-e9928.firebaseapp.com",
+            projectId: "transaction-tracker-e9928",
+            storageBucket: "transaction-tracker-e9928.firebasestorage.app",
+            messagingSenderId: "869725167353",
+            appId: "1:869725167353:web:4237dbcd2e6b8fb1e34c28"
+        };
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // Make these available globally for your existing functions
+        window.db = db;
+        window.auth = auth;
+    </script>
 
     <script>
+        // DOM elements
+        const loginForm = document.getElementById('login-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordToggle = document.getElementById('password-toggle');
+        const loginBtn = document.getElementById('login-btn');
+        const loginSpinner = document.getElementById('login-spinner');
+        const loginError = document.getElementById('login-error');
+        const signupLink = document.getElementById('signup-link');
+        
+        // Toggle password visibility
+        passwordToggle.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Toggle eye icon
+            const eyeIcon = this.querySelector('i');
+            eyeIcon.classList.toggle('fa-eye');
+            eyeIcon.classList.toggle('fa-eye-slash');
+        });
+        
+        // Form validation
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            let isValid = true;
+            
+            // Validate email
+            if (!validateEmail(emailInput.value)) {
+                document.getElementById('email-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('email-error').style.display = 'none';
+            }
+            
+            // Validate password
+            if (!passwordInput.value) {
+                document.getElementById('password-error').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('password-error').style.display = 'none';
+            }
+            
+            if (isValid) {
+                login();
+            }
+        });
+        
+        // Email validation function
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Login function
+        async function login() {
+            try {
+                // Show loading state
+                loginBtn.disabled = true;
+                loginSpinner.style.display = 'inline-block';
+                loginError.style.display = 'none';
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                // Hide login and show dashboard (handled by onAuthStateChanged)
+            } catch (error) {
+                // Handle errors
+                loginError.textContent = getErrorMessage(error.code);
+                loginError.style.display = 'block';
+                
+                // Reset loading state
+                loginBtn.disabled = false;
+                loginSpinner.style.display = 'none';
+            }
+        }
+        
+        // Sign up function
+        async function signup() {
+            try {
+                // Show loading state
+                loginBtn.disabled = true;
+                loginSpinner.style.display = 'inline-block';
+                loginError.style.display = 'none';
+                
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                await createUserWithEmailAndPassword(auth, email, password);
+                
+                // User created successfully, now they're signed in
+            } catch (error) {
+                // Handle errors
+                loginError.textContent = getErrorMessage(error.code);
+                loginError.style.display = 'block';
+                
+                // Reset loading state
+                loginBtn.disabled = false;
+                loginSpinner.style.display = 'none';
+            }
+        }
+        
+        // Get user-friendly error messages
+        function getErrorMessage(errorCode) {
+            switch (errorCode) {
+                case 'auth/invalid-email':
+                    return 'Invalid email address format.';
+                case 'auth/user-disabled':
+                    return 'This account has been disabled.';
+                case 'auth/user-not-found':
+                    return 'No account found with this email.';
+                case 'auth/wrong-password':
+                    return 'Incorrect password.';
+                case 'auth/email-already-in-use':
+                    return 'This email is already registered.';
+                case 'auth/weak-password':
+                    return 'Password should be at least 6 characters.';
+                default:
+                    return 'An error occurred during authentication. Please try again.';
+            }
+        }
+        
+        // Auth state observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } else {
+                // User is signed out
+                document.getElementById('login-container').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+                
+                // Reset loading state
+                loginBtn.disabled = false;
+                loginSpinner.style.display = 'none';
+            }
+        });
+        
+        // Set up sign up link
+        signupLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            signup();
+        });
+        
+        // Your existing application code below
         // Data storage - starting with minimal sample data
         let transactions = [];
         let people = [];
@@ -1036,17 +1208,6 @@
             'other': 'fa-money-bill-alt'
         };
         
-        // DOM elements for login
-        const loginForm = document.getElementById('login-form');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const passwordToggle = document.getElementById('password-toggle');
-        const loginBtn = document.getElementById('login-btn');
-        const loginSpinner = document.getElementById('login-spinner');
-        const loginError = document.getElementById('login-error');
-        const signupLink = document.getElementById('signup-link');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Add a couple of sample transactions if none exist
@@ -1054,67 +1215,6 @@
                 addSampleData();
             }
             
-            // Set up login functionality
-            setupLogin();
-            
-            // Set up dashboard functionality
-            setupDashboard();
-        });
-        
-        function setupLogin() {
-            // Toggle password visibility
-            passwordToggle.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                
-                // Toggle eye icon
-                const eyeIcon = this.querySelector('i');
-                eyeIcon.classList.toggle('fa-eye');
-                eyeIcon.classList.toggle('fa-eye-slash');
-            });
-            
-            // Form validation
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                let isValid = true;
-                
-                // Validate email
-                if (!validateEmail(emailInput.value)) {
-                    document.getElementById('email-error').style.display = 'block';
-                    isValid = false;
-                } else {
-                    document.getElementById('email-error').style.display = 'none';
-                }
-                
-                // Validate password
-                if (!passwordInput.value) {
-                    document.getElementById('password-error').style.display = 'block';
-                    isValid = false;
-                } else {
-                    document.getElementById('password-error').style.display = 'none';
-                }
-                
-                if (isValid) {
-                    login();
-                }
-            });
-            
-            // Set up sign up link
-            signupLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                signup();
-            });
-            
-            // Set up logout button
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    logout();
-                });
-            }
-        }
-        
-        function setupDashboard() {
             updateUI();
             
             // Tab functionality
@@ -1265,7 +1365,7 @@
             document.getElementById('interestRate').addEventListener('change', function() {
                 updateInterestCalculation();
             });
-        }
+        });
 
         // Add minimal sample data for demonstration
         function addSampleData() {
@@ -1306,89 +1406,6 @@
             ];
             
             transactions.push(...sampleTransactions);
-        }
-
-        // Login function
-        async function login() {
-            try {
-                // Show loading state
-                loginBtn.disabled = true;
-                loginSpinner.style.display = 'inline-block';
-                loginError.style.display = 'none';
-                
-                const email = emailInput.value;
-                const password = passwordInput.value;
-                
-                // Simulate API call with timeout
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                // For demo purposes, accept any non-empty password
-                if (password) {
-                    // Hide login and show dashboard
-                    document.getElementById('login-container').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                } else {
-                    throw new Error('Invalid credentials');
-                }
-            } catch (error) {
-                // Handle errors
-                loginError.textContent = 'Invalid email or password. Please try again.';
-                loginError.style.display = 'block';
-                
-                // Reset loading state
-                loginBtn.disabled = false;
-                loginSpinner.style.display = 'none';
-            }
-        }
-        
-        // Sign up function
-        async function signup() {
-            try {
-                // Show loading state
-                loginBtn.disabled = true;
-                loginSpinner.style.display = 'inline-block';
-                loginError.style.display = 'none';
-                
-                const email = emailInput.value;
-                const password = passwordInput.value;
-                
-                // Simulate API call with timeout
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                // For demo purposes, accept any non-empty password
-                if (password) {
-                    // Hide login and show dashboard
-                    document.getElementById('login-container').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                } else {
-                    throw new Error('Invalid credentials');
-                }
-            } catch (error) {
-                // Handle errors
-                loginError.textContent = 'Error creating account. Please try again.';
-                loginError.style.display = 'block';
-                
-                // Reset loading state
-                loginBtn.disabled = false;
-                loginSpinner.style.display = 'none';
-            }
-        }
-        
-        // Logout function
-        function logout() {
-            document.getElementById('login-container').style.display = 'flex';
-            document.getElementById('dashboard').style.display = 'none';
-            
-            // Clear form fields
-            emailInput.value = '';
-            passwordInput.value = '';
-            loginError.style.display = 'none';
-        }
-        
-        // Email validation function
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
         }
 
         function addTransaction() {
