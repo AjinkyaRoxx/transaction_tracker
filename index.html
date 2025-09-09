@@ -1044,6 +1044,7 @@
         let nextTransactionId = 1;
         let nextPersonId = 1;
         let currentUser = null;
+        let interestRate = 7; // Default interest rate
         
         // Payment method icons mapping
         const paymentIcons = {
@@ -1327,7 +1328,9 @@
             const interestRateInput = document.getElementById('interestRate');
             if (interestRateInput) {
                 interestRateInput.addEventListener('change', function() {
+                    interestRate = parseFloat(this.value);
                     updateInterestCalculation();
+                    saveInterestRateToFirestore(interestRate); // Save to Firebase
                 });
             }
         }
@@ -2217,6 +2220,38 @@
                 });
         }
 
+        // Firebase Functions
+        function saveInterestRateToFirestore(rate) {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).collection('settings').doc('interestRate').set({
+                rate: rate,
+                updatedAt: new Date()
+            })
+            .then(() => {
+                console.log("Interest rate saved successfully");
+            })
+            .catch((error) => {
+                console.error("Error saving interest rate: ", error);
+            });
+        }
+
+        function loadInterestRateFromFirestore() {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).collection('settings').doc('interestRate').get()
+            .then((doc) => {
+                if (doc.exists) {
+                    interestRate = doc.data().rate;
+                    document.getElementById('interestRate').value = interestRate;
+                    updateInterestCalculation();
+                }
+            })
+            .catch((error) => {
+                console.error("Error loading interest rate: ", error);
+            });
+        }
+
         function loadUserData() {
             if (!currentUser) return;
             
@@ -2282,6 +2317,10 @@
                         currencies.push(doc.data());
                     });
                     
+                    // Load interest rate
+                    return loadInterestRateFromFirestore();
+                })
+                .then(() => {
                     // Update UI
                     updateUI();
                 })
